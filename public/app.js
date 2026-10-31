@@ -4,8 +4,12 @@ const demo=[['Advanced Algorithms','CS 401',4,188,200],['Database Systems','CS 3
 const blank=()=>({name:'',code:'',credits:3,obtained:0,max:100});
 let state={profile:{name:'Ram Verma',studentId:'',semester:'Fall Semester 2024'},courses:structuredClone(demo),history:[]},storageOK=true;
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.profile&&typeof s.profile.name==='string'&&typeof s.profile.semester==='string'&&Array.isArray(s.courses)&&Array.isArray(s.history)){if(!s.courses.length||s.courses.length>100||!s.courses.every(c=>c&&typeof c.name==='string'&&['string','number'].includes(typeof c.credits)&&['string','number'].includes(typeof c.obtained)&&['string','number'].includes(typeof c.max)))throw Error('Invalid draft');state={profile:s.profile,courses:s.courses,history:s.history.filter(x=>{try{return typeof x.id==='string'&&typeof x.date==='string'&&x.profile&&typeof x.profile.name==='string'&&typeof x.profile.semester==='string'&&!!calculate(x.courses)}catch{return false}}).slice(0,100)};}}catch{storageOK=false;}
-// Update the previous sample name in existing browser profiles.
-if(state.profile.name==='Md Zishan Hussain')state.profile.name='Ram Verma';
+// Migrate the former sample name in both the current profile and saved scenarios.
+let profileUpdated=false;
+for(const profile of [state.profile,...state.history.map(entry=>entry.profile)]){
+ if(/^md\s+zishan\s+hussain$/i.test(profile.name.trim())){profile.name='Ram Verma';profileUpdated=true;}
+}
+if(profileUpdated){try{localStorage.setItem(KEY,JSON.stringify(state));}catch{storageOK=false;}}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(n,d=2)=>Number(n).toFixed(d);const badge=(s,g=false)=>`<span class="badge ${g?'green':''}">${esc(s)}</span>`;
 let route='',timer;
