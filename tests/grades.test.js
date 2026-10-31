@@ -1,0 +1,8 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {calculate,grade,targetFinal} from '../public/grades.js';
+const course=(obtained,credits=3,max=100)=>({name:'Course',obtained,credits,max});
+test('unequal credits and maxima use normalized course percentages',()=>{const r=calculate([course(90,4),course(80,2,200)]);assert.ok(Math.abs(r.gpa-16/6)<1e-10);assert.ok(Math.abs(r.percentage-220/3)<1e-10);assert.equal(r.rawPercentage,170/300*100);assert.equal(r.passed,false);});
+test('thresholds use unrounded scores',()=>{assert.equal(grade(90).points,4);assert.equal(grade(89.999).points,3.7);assert.equal(grade(49.999).letter,'F');assert.equal(grade(50).letter,'D');});
+test('rejects incomplete, nonfinite and impossible inputs',()=>{for(const c of [course(101),course(-1),course(2,0),course(2,3,0),course(''),course(NaN),{...course(80),name:' '}])assert.throws(()=>calculate([c]));assert.throws(()=>calculate([]));});
+test('zero and fractional marks are valid',()=>{assert.equal(calculate([course(0)]).gpa,0);assert.equal(calculate([course(136.5,3,150)]).percentage,91);});
+test('target solver covers feasible and impossible targets',()=>{assert.equal(targetFinal(80,40,85),92.5);assert.ok(targetFinal(40,20,90)>100);assert.ok(targetFinal(100,20,50)<0);assert.throws(()=>targetFinal(80,0,85));});
+test('sample dashboard is derived consistently',()=>{const r=calculate([course(188,4,200),course(136.5,3,150),course(144,3,150),course(174,4,200),course(178,4,200)]);assert.equal(r.credits,18);assert.equal(r.obtained,820.5);assert.equal(r.max,900);assert.ok(Math.abs(r.gpa-3.866666666666667)<1e-10);});
