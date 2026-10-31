@@ -2,8 +2,10 @@ import {calculate,grade,SCALE,targetFinal} from './grades.js';
 const $=s=>document.querySelector(s),KEY='grademate.v1';
 const demo=[['Advanced Algorithms','CS 401',4,188,200],['Database Systems','CS 320',3,136.5,150],['Web Engineering','CS 365',3,144,150],['Discrete Mathematics','MATH 250',4,174,200],['Operating Systems','CS 410',4,178,200]].map(([name,code,credits,obtained,max])=>({name,code,credits,obtained,max}));
 const blank=()=>({name:'',code:'',credits:3,obtained:0,max:100});
-let state={profile:{name:'Md Zishan Hussain',studentId:'',semester:'Fall Semester 2024'},courses:structuredClone(demo),history:[]},storageOK=true;
+let state={profile:{name:'Ram Verma',studentId:'',semester:'Fall Semester 2024'},courses:structuredClone(demo),history:[]},storageOK=true;
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.profile&&typeof s.profile.name==='string'&&typeof s.profile.semester==='string'&&Array.isArray(s.courses)&&Array.isArray(s.history)){if(!s.courses.length||s.courses.length>100||!s.courses.every(c=>c&&typeof c.name==='string'&&['string','number'].includes(typeof c.credits)&&['string','number'].includes(typeof c.obtained)&&['string','number'].includes(typeof c.max)))throw Error('Invalid draft');state={profile:s.profile,courses:s.courses,history:s.history.filter(x=>{try{return typeof x.id==='string'&&typeof x.date==='string'&&x.profile&&typeof x.profile.name==='string'&&typeof x.profile.semester==='string'&&!!calculate(x.courses)}catch{return false}}).slice(0,100)};}}catch{storageOK=false;}
+// Update the previous sample name in existing browser profiles.
+if(state.profile.name==='Md Zishan Hussain')state.profile.name='Ram Verma';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(n,d=2)=>Number(n).toFixed(d);const badge=(s,g=false)=>`<span class="badge ${g?'green':''}">${esc(s)}</span>`;
 let route='',timer;
