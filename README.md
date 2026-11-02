@@ -1,67 +1,67 @@
-# GradeMate — Student Grade Calculator
+# GradeMate — Fictional Academic Demo & SPI Calculator
 
-Complete standalone implementation of the academic portal referenced by the QR code:
-https://stitch.withgoogle.com/preview/869079966551211960?node-id=2890aa43ce66476198c244501ea8fb08
+A standalone browser application with fictional academic data and an illustrative 10-point SPI calculator. All student, institution, programme, course and result details in the default dataset are synthetic; they do not describe a real academic record.
 
-This is newly written source based on the visible preview, with working application behavior. It is not an export of the private original Stitch project. See `ANALYSIS.md` for findings and differences.
+## Demo dataset
 
-## Included
+`public/academic-data.js` contains five invented courses for Demo Student at Sample Institute (fictional), B.Sc. Computer Applications (demo). The courses total 16 credits and 133 weighted grade points: SPI = 133/16 = 8.3125, displayed as 8.31. Because this example contains only one semester, its example CPI equals SPI.
 
-- Responsive dashboard and desktop/mobile navigation
-- Editable student profile and semester
-- Add/remove subjects, credit hours, obtained marks and maximum marks
-- Live, validated credit-weighted GPA and percentage calculations
-- Final exam target calculator
-- Results with subject breakdown and pass/fail status
-- Up to 100 saved scenarios with restore, details and removal
-- CSV report download and print / Save as PDF
-- Browser-local persistence, with no API keys, paid services, external scripts or runtime dependencies
-- Unit tests, static build script, Netlify configuration and Dockerfile
+There is no affiliation with a real institution and no claim that the default grades belong to any person.
 
-## Run
+## Illustrative grading
 
-From this directory, with Python 3 installed:
+AA=10, AB=9, BB=8, BC=7, CC=6, CD=5, DD=4, F=0.
+
+- SPI = sum(course credits × grade points) / total credits taken.
+- F earns zero credits and zero points; its attempted credits remain in the denominator.
+- Pending/unknown grades are rejected rather than treated as failed courses.
+- No percentage cutoffs, numerical marks or SPI-to-percentage conversion are assumed.
+- Institutions can use different policies; adapt `public/grades.js` when using the tool with your own grading system.
+
+## Features
+
+- Responsive dashboard and fictional course/result tables
+- Editable letter-grade and credit-based planning calculator
+- Separate fixed demo record and editable scenarios
+- Browser-local scenario history with restore/removal
+- CSV exports explicitly labeled fictional or planning scenario
+- Browser print / Save as PDF
+- No accounts, server storage, external scripts or API keys
+
+## Run locally
+
+With Python 3:
 
 ```sh
 python3 -m http.server 8080 --bind 127.0.0.1 --directory public
 ```
 
-Open http://localhost:8080. Serve through HTTP; do not double-click the HTML file, because JavaScript modules need an HTTP origin. Stop the server with Ctrl+C.
+Open http://localhost:8080. Stop with Ctrl+C. Serve through HTTP; do not open the module-based app through file://.
 
-With Node.js installed, `npm start` runs the same server. There are no npm dependencies to install.
+## Test and build
 
-## Validate and build
-
-Use Node.js 20 or newer:
+With Node.js 20 or newer:
 
 ```sh
 npm test
 npm run build
 ```
 
-The build copies the complete site to `dist/`. It requires no secrets or environment variables. You can alternatively publish `public/` directly; its contents are identical to the built site.
+There are no npm dependencies to install. The build copies the browser app into `dist/`.
 
-## Deployment
+## Deploy
 
-### Any static host, cPanel, GitHub Pages, or object storage website
+### GitHub Pages
 
-Upload the **contents** of `dist/` to your website document root. `index.html` must sit at that root, beside `styles.css`, `app.js`, `grades.js` and `icon.svg`. Hash-based routes do not need server rewrites. Relative asset paths also support project subdirectories.
+The included `.github/workflows/static.yml` publishes `public/` on pushes to `main`. In Settings → Pages, choose GitHub Actions. Relative asset paths support repository project URLs.
 
-The separate `student-grade-portal-static.zip` contains those deployable files at the archive root. Extract it into your host's public directory. Configure HTTPS on the host for normal production use.
+### Netlify / Vercel / Cloudflare Pages
 
-### Netlify repository deployment
+Use the repository root as the project/base directory, `npm run build` as the build command, and `dist` as the output/publish directory. No environment variables are required. Netlify configuration and security headers are provided.
 
-Use `student-grade-portal` as the project/base directory if uploading the entire parent repository. The included `netlify.toml` defines:
+### Static hosting
 
-- Build command: `npm run build`
-- Publish directory: `dist`
-- Content security and response headers
-
-For a new repository containing only this folder's contents, use the repository root as the base directory. A drag-and-drop deployment can instead use the built `dist/` directory.
-
-### Vercel or Cloudflare Pages
-
-Deploy as a plain/static project. Set the project root to this directory, build command to `npm run build`, and output directory to `dist`. No framework, server function or environment variable is required.
+Upload the contents of `public/` or `dist/` to the web root, keeping `index.html` alongside the JS/CSS files. Enable HTTPS through your host.
 
 ### Docker
 
@@ -70,41 +70,19 @@ docker build -t grademate .
 docker run --rm -p 8080:80 grademate
 ```
 
-Open http://localhost:8080. The image serves `public/` through Nginx. For production, place it behind your HTTPS reverse proxy. The Docker image was supplied but was not built during this task.
+Nginx serves the app at http://localhost:8080. The Docker image is provided but was not built during this update.
 
-## Formulas and customization
+## Storage and privacy
 
-Change `public/grades.js` to use your institution's grading thresholds. The supplied scale follows the preview calculator's illustrated A ≥90% (4.0), A− ≥85% (3.7), etc., and uses a 50% course pass threshold. It is an illustrative policy, not a universal university standard.
+Scenarios are stored on the current browser and origin under `grademate.fictional-demo.v3`. They are not sent to a server or added to the repository. Previous browser datasets remain separate. A different storage key prevents earlier personal or sample entries from appearing in the public demo by default.
 
-- Course percent = obtained / maximum × 100.
-- Semester GPA = sum(course grade points × credits) / sum(attempted credits).
-- Weighted percent = sum(course percent × credits) / sum(attempted credits).
-- Raw percent = sum(obtained marks) / sum(maximum marks) × 100.
-- Required final score = (target − current coursework average × (1 − final weight)) / final weight.
-
-The target calculator assumes coursework is complete and the final exam is the only remaining component. Requirements above 100% are reported as unattainable. Failed subjects remain in the GPA denominator. Thresholds use full precision, and results are rounded only for presentation.
-
-Profile defaults and sample courses are in `public/app.js`. Branding and theme are in `public/index.html`, `public/styles.css` and `public/icon.svg`.
-
-## Storage and scope
-
-State is stored under `grademate.v1` in localStorage for the current browser and origin. It is not synchronized between users, browsers, devices, ports or hosting domains. Clearing browser data removes it. Export CSV reports before changing origins if needed. Removing a saved calculation is immediate; there is no history trash. The 100-entry limit discards the oldest entry when saving a new one.
-
-There is no backend, login, institutional integration, cumulative academic record, or cloud backup. Add authenticated server storage if those capabilities are required. The initial sample semester is Fall 2024 to match the supplied design; edit it through the avatar/profile dialog.
-
-## Verification performed
-
-- Six Node tests: unequal credits/maxima, grade boundaries, invalid inputs, fractional/zero marks, target scenarios and sample arithmetic
-- Build and JavaScript syntax check
-- Browser: live result updates; target final score; save, reload and restore history; results navigation; CSV download
-- Visual QA at 1440px and 390px; no page-level horizontal overflow
-- Docker and external hosting were not executed; no live deployment URL is included
+Up to 100 scenarios are retained. Clearing browser data removes them. CSV exports are local downloads. The repository contains no personal academic document, birth date, identifier, verification code or QR image.
 
 ## Files
 
-- `public/`: complete browser application
-- `tests/grades.test.js`: formula regression tests
-- `build.mjs`, `package.json`: optional Node commands
-- `netlify.toml`: static hosting configuration
-- `Dockerfile`, `.dockerignore`: Nginx container packaging
-- `ANALYSIS.md`: reference review and implementation decisions
+- `public/academic-data.js`: fictional default dataset
+- `public/grades.js`: grade conversion and SPI formulas
+- `public/app.js`: dashboard, results, calculator, history and exports
+- `public/index.html`, `public/styles.css`, `public/icon.svg`: responsive interface
+- `tests/grades.test.js`: synthetic-data reconciliation and grading tests
+- `build.mjs`, `netlify.toml`, `Dockerfile`: build/hosting support

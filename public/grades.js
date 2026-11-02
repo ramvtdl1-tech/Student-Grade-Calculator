@@ -1,14 +1,23 @@
-// Illustrative standard scale from the Stitch calculator; adapt to your institution.
-export const SCALE = [[90,'A',4],[85,'A-',3.7],[80,'B+',3.3],[75,'B',3],[70,'B-',2.7],[65,'C+',2.3],[60,'C',2],[55,'D+',1.3],[50,'D',1],[0,'F',0]];
-export function grade(percent){if(!Number.isFinite(percent)||percent<0||percent>100)throw Error('Percentage must be between 0 and 100.');const [,letter,points]=SCALE.find(([min])=>percent>=min);return {letter,points};}
-export function calculate(courses){
- if(!Array.isArray(courses)||!courses.length||courses.length>100)throw Error('Enter between 1 and 100 subjects.');
- const rows=courses.map(c=>{const credits=Number(c.credits),obtained=Number(c.obtained),max=Number(c.max);
- if(!String(c.name||'').trim())throw Error('Every subject needs a name.');
- if([c.credits,c.obtained,c.max].some(v=>v===''||v==null)||![credits,obtained,max].every(Number.isFinite)||credits<=0||credits>60||max<=0||max>1000000||obtained<0||obtained>max)throw Error('Use credits from 0–60 (above zero), positive maximum marks, and obtained marks between zero and the maximum.');
- const percent=obtained/max*100;return {...c,credits,obtained,max,percent,...grade(percent)};});
- const credits=rows.reduce((s,c)=>s+c.credits,0),obtained=rows.reduce((s,c)=>s+c.obtained,0),max=rows.reduce((s,c)=>s+c.max,0);
- const percentage=rows.reduce((s,c)=>s+c.percent*c.credits,0)/credits;
- return {rows,credits,obtained,max,percentage,rawPercentage:obtained/max*100,gpa:rows.reduce((s,c)=>s+c.points*c.credits,0)/credits,passed:rows.every(c=>c.letter!=='F')};
+// Illustrative 10-point letter-to-point mapping for fictional examples.
+// No mark/percentage cutoffs are assumed from a letter grade.
+export const SCALE = [['AA',10],['AB',9],['BB',8],['BC',7],['CC',6],['CD',5],['DD',4],['F',0]];
+export function grade(letter) {
+  const normalized=String(letter??'').trim().toUpperCase();
+  const match=SCALE.find(([key])=>key===normalized);
+  if(!match)throw Error('Select a final letter grade: AA, AB, BB, BC, CC, CD, DD or F. Pending grades cannot be used to calculate SPI.');
+  return {letter:match[0],points:match[1]};
 }
-export function targetFinal(current,weight,target){[current,weight,target]=[current,weight,target].map(Number);if(![current,weight,target].every(Number.isFinite)||current<0||current>100||weight<=0||weight>100||target<0||target>100)throw Error('Enter percentages from 0–100; final weight must be above zero.');return (target-current*(1-weight/100))/(weight/100);}
+export function calculate(courses) {
+  if(!Array.isArray(courses)||!courses.length||courses.length>100)throw Error('Enter between 1 and 100 subjects.');
+  const rows=courses.map(c=>{
+    if(!String(c.name??'').trim())throw Error('Every subject needs a name.');
+    const credits=Number(c.credits);
+    if(c.credits===''||c.credits==null||!Number.isFinite(credits)||credits<=0||credits>60)throw Error('Credit hours must be greater than zero and at most 60.');
+    const converted=grade(c.letter);
+    return {...c,credits,...converted,earned:converted.points>0?credits:0};
+  });
+  const credits=rows.reduce((sum,c)=>sum+c.credits,0);
+  const earned=rows.reduce((sum,c)=>sum+c.earned,0);
+  const weightedPoints=rows.reduce((sum,c)=>sum+c.credits*c.points,0);
+  return {rows,credits,earned,weightedPoints,spi:weightedPoints/credits,passed:rows.every(c=>c.letter!=='F')};
+}
